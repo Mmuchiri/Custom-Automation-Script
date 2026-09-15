@@ -1,0 +1,75 @@
+#!/bin/bash
+
+Define paths and log file location
+LOG_FILE="$HOME/script_log.txt"
+SOURCE_DIR="$HOME/Downloads"
+TXT_DEST="$HOME/Documents/TextFiles"
+BACKUP_DIR="$HOME/Backups"
+TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+
+
+Function to write messages to terminal and log file
+log_message() {
+local MSG="[$(date +"%Y-%m-%d %H:%M:%S")] $1"
+echo "$MSG"
+echo "$MSG" >> "$LOG_FILE"
+}
+User Input 
+read -p "Do you want to run the automation script? (y/n): " USER_INPUT
+
+
+if [[ "$USER_INPUT" != "y" && "$USER_INPUT" != "Y" ]]; then
+echo "Script execution cancelled by user."
+exit 0
+fi
+
+
+log_message "=== Automation Script Started ==="
+
+
+# Create required directories if they don't exist
+mkdir -p "$TXT_DEST" "$BACKUP_DIR"
+
+
+# --- TASK 1: File Organization ---
+log_message "Starting File Organization..."
+
+
+# Check if there are .txt files to move
+TXT_FILES=("$SOURCE_DIR"/*.txt)
+if [ -e "${TXT_FILES[0]}" ]; then
+# Loop through each .txt file and move it
+for FILE in "$SOURCE_DIR"/*.txt; do
+mv "$FILE" "$TXT_DEST/"
+log_message "Moved file: $(basename "$FILE") to $TXT_DEST"
+done
+else
+log_message "No .txt files found in $SOURCE_DIR to organize."
+fi
+
+
+# --- TASK 2: Backup Automation ---
+log_message "Starting Backup Automation..."
+
+
+# Check if the target backup folder exists and contains files
+if [ -d "$TXT_DEST" ]; then
+BACKUP_FILE="$BACKUP_DIR/TextFiles_backup_$TIMESTAMP.tar.gz"
+
+
+# Compress the folder into a timestamped archive
+tar -czf "$BACKUP_FILE" -C "$HOME/Documents" "TextFiles" 2>/dev/null
+
+
+if [ $? -eq 0 ]; then
+log_message "Backup created successfully: $BACKUP_FILE"
+else
+log_message "Error: Failed to create backup."
+fi
+else
+log_message "Backup skipped: Source directory $TXT_DEST does not exist."
+fi
+
+
+log_message "=== Automation Script Completed ==="
+echo "Execution finished. Logs saved to: $LOG_FILE"  
